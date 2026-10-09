@@ -1085,3 +1085,6 @@ dialog a {
 .z-scale span:last-child {
   transform: translateX(-100%);
 }
+
+/* Keep synthetic provenance visible while inspecting lower charts. */
+.masthead { position: sticky; top: 0; z-index: 20; background: var(--bg); }

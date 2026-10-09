@@ -45,7 +45,7 @@ function updateReading() {
   }).join("");
   const shown = events.filter((c) => c.m <= m);
   $("alert-count").textContent = `${shown.length} crossings so far`;
-  $("alerts").innerHTML = shown.length ? shown.slice(-8).reverse().map((c) => `<button data-minute="${c.m}" aria-label="Jump to ${clock(c.m)}, ${LONG[c.j]} threshold crossing"><strong>${clock(c.m)} \xB7 ${signed(c.z, 1)}\u03C3</strong> ${LONG[c.j]}<span>${LONG[c.j]} is ${fmt(Math.abs(c.z), 1)}\u03C3 ${c.z > 0 ? "above" : "below"} its usual level for ${clock(c.m)}.</span></button>`).join("") : `<div class="empty">${count < 8 ? "At least eight valid prior sessions are needed for threshold alerts." : "No \xB12\u03C3 or \xB13\u03C3 threshold crossings up to this time."}</div>`;
+  $("alerts").innerHTML = shown.length ? shown.slice().reverse().map((c) => `<button data-minute="${c.m}" aria-label="Jump to ${clock(c.m)}, ${LONG[c.j]} threshold crossing"><strong>${clock(c.m)} \xB7 ${signed(c.z, 1)}\u03C3</strong> ${LONG[c.j]}<span>${LONG[c.j]} is ${fmt(Math.abs(c.z), 1)}\u03C3 ${c.z > 0 ? "above" : "below"} its usual level for ${clock(c.m)}.</span></button>`).join("") : `<div class="empty">${count < 8 ? "At least eight valid prior sessions are needed for threshold alerts." : "No \xB12\u03C3 or \xB13\u03C3 threshold crossings up to this time."}</div>`;
   $("event-callout").hidden = s !== 30;
   $("injection-note").textContent = s === 30 ? "14:00 skew event deliberately injected" : data.manifest.lengths[s] === 211 ? "Synthetic half-day \xB7 closes 13:00" : "Synthetic historical session";
   const end = data.manifest.lengths[s] - 1;
