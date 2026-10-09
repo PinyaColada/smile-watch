@@ -1,0 +1,71 @@
+name: Build and deploy synthetic replay
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18.0'
+          cache: npm
+      - name: Install pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.lock
+          .venv/bin/pip install --no-deps -e '.[dev,ibkr]'
+          npm ci --ignore-scripts
+      - name: Test and lint engine
+        run: make test lint
+      - name: Build every synthetic snapshot
+        run: .venv/bin/smile-watch build
+      - name: Verify full-dataset regression and browser arithmetic
+        run: |
+          make test
+          npm test
+      - name: Build self-contained site
+        env:
+          SMILE_WATCH_REPO: https://github.com/${{ github.repository }}
+        run: npm run build
+      - name: Install test browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify offline, 3D, fallback and mobile
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verification-artifacts
+          path: artifacts/
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: docs
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Publish static site
+        id: deployment
+        uses: actions/deploy-pages@v4

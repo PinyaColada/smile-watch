@@ -4,7 +4,8 @@ VENV = .venv/bin
 .PHONY: setup run build plots test lint web serve
 setup:
 	$(PYTHON) -m venv .venv
-	$(VENV)/pip install -e '.[dev,ibkr]'
+	$(VENV)/pip install -r requirements-dev.lock
+	$(VENV)/pip install --no-deps -e '.[dev,ibkr]'
 	npm ci
 
 build:

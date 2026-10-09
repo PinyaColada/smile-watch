@@ -88,6 +88,7 @@ def build(root: Path, seed: int = SEED) -> None:
     db.execute("INSERT OR REPLACE INTO metadata VALUES ('synthetic', 'true')")
     db.execute("INSERT OR REPLACE INTO metadata VALUES ('seed', ?)", (str(seed),))
     db.commit()
+    stored_rows = db.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
     db.close()
     (root / "build").mkdir(exist_ok=True)
     np.savez_compressed(
@@ -106,7 +107,8 @@ def build(root: Path, seed: int = SEED) -> None:
         synthetic=True,
         seed=seed,
         seconds=round(time.monotonic() - started, 2),
-        observations=int(np.prod(values.shape)),
+        observations=stored_rows,
+        slots_including_padding=int(np.prod(values.shape)),
         valid=int(np.isfinite(values).sum()),
         event_p25_7dte_peak_z=peak,
         event_p25_7dte_peak_minute=270 + int(np.nanargmax(finite)),
