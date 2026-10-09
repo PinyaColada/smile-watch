@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A synthetic delta-based volatility replay. Explore the smile, historical deviations and a disclosed injected skew event, entirely offline.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>smile-watch / synthetic volatility replay</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23090f19'/%3E%3Cpath d='M5 9Q16 31 27 9' fill='none' stroke='%238bd5cb' stroke-width='3'/%3E%3C/svg%3E">
+<style>/* STYLES */</style>
+</head>
+<body>
+<div class="app">
+<header class="masthead">
+  <a class="brand" href="#main" aria-label="smile-watch home"><svg viewBox="0 0 38 30" aria-hidden="true"><path d="M2 4Q19 42 36 4M2 13Q19 36 36 13"/></svg><span>smile<span class="brand-divider">/</span>watch</span></a>
+  <div class="edition">DELTA-BASED VOLATILITY MONITOR<span>ONE UNDERLYING. FOUR POINTS. THROUGH TIME.</span></div>
+  <div class="header-links"><span class="badge">SYNTHETIC DATA</span><button id="about" class="text-button">How it works</button><a class="repo" href="REPO_URL" target="_blank" rel="noopener">Source code</a></div>
+</header>
+<main id="main">
+  <div class="intro"><div><div class="eyebrow">SPY-LIKE / EUROPEAN OPTIONS / SESSION REPLAY</div><h1>Watch the downside.</h1></div><p>Is downside protection unusually expensive<br>for this time of day?</p></div>
+  <section class="controls" aria-label="Replay settings">
+    <label>Session<select id="session"></select></label>
+    <label>Expiry<select id="expiry"><option value="0">0DTE</option><option value="1">1DTE</option><option value="2" selected>7DTE</option><option value="3">30DTE</option></select></label>
+    <label>History<select id="history"><option value="10">10 sessions</option><option value="20" selected>20 sessions</option><option value="30">30 sessions</option></select></label>
+    <label>Sampling<select id="sampling"><option value="30">30 seconds</option><option value="60" selected>1 minute</option><option value="300">5 minutes</option></select></label>
+    <label>Focus delta<select id="target"><option value="0">15Δ put</option><option value="1" selected>25Δ put</option><option value="2">25Δ call</option><option value="3">15Δ call</option></select></label>
+    <div class="source-note"><span class="source-dot"></span><span>Seeded simulation<br><small id="injection-note">14:00 skew event deliberately injected</small></span></div>
+  </section>
+  <section class="transport" aria-label="Replay transport">
+    <button id="reset" class="icon-button" title="Back to open (Home)" aria-label="Back to session open">|‹</button>
+    <button id="play" class="play-button" aria-label="Play replay" aria-pressed="false">Play <span>▶</span></button>
+    <label class="speed-label"><span class="sr-only">Playback speed</span><select id="speed"><option value="5">5×</option><option value="20" selected>20×</option><option value="60">60×</option><option value="300">300×</option></select></label>
+    <div class="scrubber"><input id="scrub" type="range" min="0" max="390" step="1" value="277" aria-label="Session time"><div class="scrub-labels"><span>09:30</span><span>11:00</span><span>12:30</span><span class="event-time">14:00 · injection</span><span id="close-time">16:00</span></div></div>
+    <div class="current-clock"><output id="clock">14:07</output><span>NEW YORK</span></div>
+  </section>
+  <section class="observatory" aria-label="Synthetic volatility surface and current reading">
+    <div class="surface-panel">
+      <div class="panel-heading"><div><span class="section-number">01 /</span><h2>The evolving smile</h2><span class="synthetic-label">SYNTHETIC</span></div><div class="segmented" aria-label="Surface axes"><button id="view-time" class="active" aria-pressed="true">Session</button><button id="view-term" aria-pressed="false">Term structure</button></div></div>
+      <div class="surface-toolbar"><span id="scene-caption">DELTA × TIME OF DAY × IMPLIED VOLATILITY</span><div class="segmented compact" aria-label="Surface color"><button id="color-iv" class="active" aria-pressed="true">IV</button><button id="color-z" aria-pressed="false">z-score</button></div></div>
+      <div id="surface"><canvas id="heatmap" role="img" aria-label="Synthetic volatility heatmap, time against delta"></canvas><div id="three-container"></div><div id="surface-mode">2D / DELTA MAP</div><button id="reset-camera" class="text-button" hidden>Reset camera</button></div>
+      <div class="surface-footer"><span><i class="key solid"></i>Elapsed session <i class="key ghost"></i>Historical mean <i class="key future"></i>Future replay</span><div id="color-legend"><span>16%</span><span class="gradient iv"></span><span>32% IV</span></div></div>
+    </div>
+    <aside class="reading" aria-label="Synthetic current target reading">
+      <div class="eyebrow">AT THE CURSOR <span class="synthetic-label">SYNTHETIC</span></div>
+      <div class="reading-title"><h2 id="focus-name">25 delta put</h2><span id="focus-expiry">7DTE</span></div>
+      <div class="big-z" id="focus-z">+3.27<span>σ</span></div>
+      <p id="assessment">Above its usual level<br>for this time of day.</p>
+      <dl class="reading-details"><div><dt>Implied volatility</dt><dd id="focus-iv">24.18%</dd></div><div><dt>Historical mean</dt><dd id="focus-mean">20.97%</dd></div><div><dt>Moving target strike</dt><dd id="focus-strike">—</dd></div><div><dt>Synthetic spot</dt><dd id="spot">—</dd></div><div><dt>Valid prior sessions</dt><dd id="count">19 / 20</dd></div></dl>
+      <div class="reading-status" id="quality">PCHIP interpolation · valid bracket</div>
+      <div class="injection-callout" id="event-callout"><span>CONTROLLED EVENT</span><p>The downside-skew shock at 14:00 is deliberately injected.</p><button id="jump-event" class="text-button">Jump to 14:07</button></div>
+    </aside>
+  </section>
+  <div class="point-tape" id="point-tape" aria-label="Four synthetic target delta values"></div>
+  <section class="alert-section" aria-label="Synthetic threshold crossings"><div class="alert-heading"><span class="alert-mark">!</span><h2>Threshold crossings</h2><span class="synthetic-label">SYNTHETIC</span><span id="alert-count"></span></div><div id="alerts"></div></section>
+  <section class="charts" aria-label="Linked synthetic charts">
+    <article class="chart-panel"><div class="panel-heading"><div><span class="section-number">02 /</span><h2>Delta IV</h2></div><span class="synthetic-label">SYNTHETIC · IV %</span></div><div id="iv-legend" class="chart-legend"></div><canvas id="iv-chart" role="img" aria-label="Synthetic four delta IV series up to cursor"></canvas></article>
+    <article class="chart-panel"><div class="panel-heading"><div><span class="section-number">03 /</span><h2>The skew</h2></div><span class="synthetic-label">SYNTHETIC · VOL POINTS</span></div><div id="skew-legend" class="chart-legend"></div><canvas id="skew-chart" role="img" aria-label="Synthetic risk reversals and wings up to cursor"></canvas></article>
+    <article class="chart-panel"><div class="panel-heading"><div><span class="section-number">04 /</span><h2>Unusual, relative to when?</h2></div><span class="synthetic-label">SYNTHETIC · σ</span></div><div class="z-controls"><div class="segmented compact"><button id="z-iv" class="active" aria-pressed="true">IV series</button><button id="z-skew" aria-pressed="false">Skew series</button></div><span>Reference ±2σ / ±3σ</span></div><canvas id="z-chart" role="img" aria-label="Synthetic z-scores and threshold crossings up to cursor"></canvas></article>
+    <article class="chart-panel"><div class="panel-heading"><div><span class="section-number">05 /</span><h2>A slice of the smile</h2></div><span class="synthetic-label">SYNTHETIC · IV %</span></div><div class="chart-legend"><span><i style="--key:#8bd5cb"></i>Selected moment</span><span><i class="dashed"></i>Prior-session mean ±1σ</span></div><canvas id="smile-chart" role="img" aria-label="Synthetic current smile against prior-session mean and one standard deviation band"></canvas></article>
+  </section>
+  <footer><div><span class="footer-brand">smile/watch</span><span>SYNTHETIC DATA. Measures unusualness, not predictive value.</span></div><div class="shortcuts"><kbd>Space</kbd> play/pause <kbd>←</kbd><kbd>→</kbd> step <kbd>[</kbd><kbd>]</kbd> speed</div></footer>
+</main>
+</div>
+<dialog id="how"><div class="drawer-head"><span class="eyebrow">METHODOLOGY</span><button id="close-about" aria-label="Close how it works">Close</button></div><h2>Same delta.<br>Same time of day.</h2><p>We recover European Black–Scholes IV from synthetic option quotes, then interpolate in spot-delta space to follow 15Δ and 25Δ puts and calls as their strikes move.</p><p>Each IV, risk reversal and wing is compared with the same minute after the New York open in the previous N completed sessions, excluding today; at least eight valid observations are required, and the band is ±1 sample standard deviation.</p><p>All market data are synthetic, including the deliberate 14:00 downside-skew injection in the final session; 30-second sampling repeats minute observations, half-day afternoons remain missing, and faint future surfaces are visible only as an ex-post replay aid.</p><p>This measures unusualness, not predictive value; the optional IBKR adapter defaults to paper mode and has NOT been tested against a live account.</p><a href="REPO_URL" target="_blank" rel="noopener">Read the methodology and source</a></dialog>
+<script id="replay-data" type="application/json">/* DATA */</script>
+<script>/* APP */</script>
+</body></html>

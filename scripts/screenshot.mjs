@@ -1,0 +1,10 @@
+import {chromium} from 'playwright';
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const page=await browser.newPage({viewport:{width:1440,height:1100},deviceScaleFactor:1});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('file:///home/jaume/smile-watch/docs/index.html');
+await page.waitForFunction(()=>window.smileWatch?.ready);
+await page.evaluate(()=>document.fonts.ready);
+await page.screenshot({path:process.argv[2]||'artifacts/replay-2d.png',fullPage:true});
+console.log(JSON.stringify({errors,reading:await page.locator('#focus-z').innerText(),height:await page.evaluate(()=>document.body.scrollHeight)},null,2));
+await browser.close();

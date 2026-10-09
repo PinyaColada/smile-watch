@@ -1,0 +1,21 @@
+{
+  "name": "smile-watch-replay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "test": "node --test tests/web.test.mjs",
+    "test:browser": "node scripts/browser-check.mjs"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "5.2.6",
+    "@fontsource/ibm-plex-sans": "5.2.6",
+    "fflate": "0.8.3",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.5",
+    "playwright": "1.58.2"
+  }
+}
