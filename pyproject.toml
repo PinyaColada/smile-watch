@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smile-watch"
+version = "0.1.0"
+description = "Synthetic delta-based implied volatility replay"
+requires-python = ">=3.11"
+dependencies = ["numpy==2.2.6", "scipy==1.15.3"]
+
+[project.optional-dependencies]
+dev = ["pytest==8.4.1", "ruff==0.12.2", "matplotlib==3.10.3"]
+ibkr = ["ib_async==2.1.0"]
+
+[project.scripts]
+smile-watch = "smile_watch.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
