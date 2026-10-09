@@ -164,7 +164,8 @@ The committed `docs/` tree works independently of Actions. To enable the build-a
 workflow, choose **Repository → Settings → Pages → Build and deployment → Source → GitHub Actions**.
 Push to `main`, or run **Actions → Build and deploy synthetic replay → Run workflow**.
 The workflow rebuilds the synthetic data, tests the engine and browser, and deploys only static files.
-The job's deployment URL is the authoritative published URL.
+The job's deployment URL is the authoritative published URL. The `github-pages` environment
+allows deployments from `main` (Settings → Environments → github-pages → Deployment branches).
 
 If Actions is unavailable, choose **Deploy from a branch → main → /docs → Save** instead.
 That publishes the already committed build. No secrets are required for either option.
@@ -173,6 +174,11 @@ That publishes the already committed build. No secrets are required for either o
 The requested [social preview](artifacts/social-preview.png) is a 1280 × 640 capture of the
 actual synthetic visualization. Upload it under **Settings → General → Social preview**.
 The site also includes Open Graph metadata pointing to its own copy.
+
+The published build was verified in a fresh Chromium profile and matched the committed HTML
+byte-for-byte. A downloaded copy of that published response also ran offline with zero network
+requests. See [publication verification](artifacts/published-verification.json) and
+[Docker verification](artifacts/docker-verification.json).
 
 ## What I would do next
 

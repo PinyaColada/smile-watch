@@ -1,0 +1,48 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdtemp} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
+import {tmpdir,homedir} from 'node:os';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const url='https://pinyacolada.github.io/smile-watch/';
+const root=path.resolve(import.meta.dirname,'..');
+const executable=path.join(homedir(),'.cache/ms-playwright/chromium-1228/chrome-linux64/chrome');
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||(existsSync(executable)?executable:undefined),args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const report={url,verifiedAt:new Date().toISOString(),synthetic:true,errors:[],requests:[]};
+try{
+  const context=await browser.newContext({viewport:{width:1440,height:1050}});
+  const page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));page.on('request',r=>report.requests.push(r.url()));
+  const started=performance.now();const response=await page.goto(url,{waitUntil:'networkidle'});
+  assert.equal(response.status(),200);
+  await page.waitForFunction(()=>window.smileWatch?.ready&&document.documentElement.dataset.surface==='3d');
+  report.freshProfileLoadMs=Math.round(performance.now()-started);
+  assert.match(await page.locator('#focus-z').innerText(),/\+3\.27/);
+  assert.match(await page.locator('.badge').innerText(),/SYNTHETIC DATA/);
+  assert.equal(await page.locator('.repo').getAttribute('href'),'https://github.com/PinyaColada/smile-watch');
+  assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'),url+'assets/social-preview.png');
+  assert.ok(report.requests.every(r=>r.startsWith(url)||r.startsWith('data:')));
+  await page.locator('#view-term').click();await page.locator('#color-z').click();
+  await page.locator('#view-time').click();await page.locator('#color-iv').click();
+  await page.screenshot({path:path.join(root,'artifacts/published.png'),fullPage:true});
+  // Download the bytes actually served by Pages, not the local build.
+  const responseBytes=await response.body();
+  const local=await readFile(path.join(root,'docs/index.html'));
+  report.matchesCommittedHTML=responseBytes.equals(local);
+  assert.ok(report.matchesCommittedHTML,'Published HTML differs from committed build');
+  const temporary=await mkdtemp(path.join(tmpdir(),'smile-watch-published-offline-'));
+  await writeFile(path.join(temporary,'index.html'),responseBytes);
+  await context.close();
+  const offline=await browser.newContext({offline:true,viewport:{width:1280,height:900}});
+  const offlinePage=await offline.newPage();offlinePage.on('pageerror',e=>report.errors.push(e.message));const offlineRequests=[];offlinePage.on('request',r=>offlineRequests.push(r.url()));
+  await offlinePage.goto(pathToFileURL(path.join(temporary,'index.html')).href);
+  await offlinePage.waitForFunction(()=>window.smileWatch?.ready&&document.documentElement.dataset.surface==='3d');
+  assert.match(await offlinePage.locator('#focus-z').innerText(),/\+3\.27/);
+  await offlinePage.selectOption('#expiry','3');assert.match(await offlinePage.locator('#focus-expiry').innerText(),/30DTE/);
+  await offlinePage.locator('#reset').click();assert.equal(await offlinePage.locator('#clock').innerText(),'09:30');
+  assert.ok(offlineRequests.every(r=>r.startsWith('file:')||r.startsWith('data:')));
+  report.downloadedHTMLWorksOffline=true;report.offlineNetworkRequests=offlineRequests.filter(r=>r.startsWith('http')).length;
+  report.surface='3d';assert.deepEqual(report.errors,[]);
+  await writeFile(path.join(root,'artifacts/published-verification.json'),JSON.stringify(report,null,2)+'\n');
+  console.log(JSON.stringify(report,null,2));
+}finally{await browser.close();}

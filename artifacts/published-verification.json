@@ -1,0 +1,14 @@
+{
+  "url": "https://pinyacolada.github.io/smile-watch/",
+  "verifiedAt": "2026-10-09T21:06:59.383Z",
+  "synthetic": true,
+  "errors": [],
+  "requests": [
+    "https://pinyacolada.github.io/smile-watch/"
+  ],
+  "freshProfileLoadMs": 2232,
+  "matchesCommittedHTML": true,
+  "downloadedHTMLWorksOffline": true,
+  "offlineNetworkRequests": 0,
+  "surface": "3d"
+}
