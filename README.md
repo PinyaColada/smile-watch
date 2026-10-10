@@ -131,7 +131,12 @@ surface uses two-minute geometry with every minute retained around the injected 
 charts and statistics retain the full minute history. The 17-point surface is recovered from
 the chains; the four monitored points are highlighted, not used to fabricate a dense smile.
 
-**IBKR.** The IBKR adapter has NOT been tested against a live account.
+**IBKR.**
+
+> The data source sits behind an interface, and I have an IBKR adapter ready that I’d validate against a paper account in the first days.
+
+The adapter has been tested only with mocks, and has not yet been validated against a
+paper account. The IBKR adapter has NOT been tested against a live account.
 
 `IBKRSource` implements the same `get_chain(underlying, expiry, ts)` contract as the synthetic
 source and is tested with mocks. It defaults to paper TWS on `127.0.0.1:7497` and connects
